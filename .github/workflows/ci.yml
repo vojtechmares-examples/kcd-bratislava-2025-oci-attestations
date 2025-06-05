@@ -21,6 +21,7 @@ jobs:
           cosign-release: "v2.5.0"
 
       - name: Validate Dockerfile base image (distroless)
+        shell: bash
         run: cosign dockerfile verify --base-image-only --certificate-identity keyless@distroless.iam.gserviceaccount.com --certificate-oidc-issuer https://accounts.google.com Dockerfile
 
       - name: Set up qemu
@@ -71,6 +72,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Sign the published OCI image
+        shell: bash
         env:
           # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
           TAGS: ${{ steps.meta.outputs.tags }}
