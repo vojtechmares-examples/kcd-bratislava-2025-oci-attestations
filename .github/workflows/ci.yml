@@ -20,6 +20,9 @@ jobs:
         with:
           cosign-release: "v2.5.0"
 
+      - name: Validate Dockerfile base image (distroless)
+        run: cosign dockerfile verify --base-image-only --certificate-identity keyless@distroless.iam.gserviceaccount.com --certificate-oidc-issuer https://accounts.google.com Dockerfile
+
       - name: Set up qemu
         uses: docker/setup-qemu-action@v3
 
