@@ -39,11 +39,24 @@ jobs:
             type=sha,format=long
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
 
+      ## Ref: https://docs.docker.com/build/ci/github-actions/attestations/#default-provenance
+      # The docker/build-push-action GitHub Action automatically adds provenance
+      # attestations to your image, with the following conditions:
+      # - If the GitHub repository is public, provenance attestations with
+      #   mode=max are automatically added to the image.
+      # - If the GitHub repository is private, provenance attestations with
+      #   mode=min are automatically added to the image.
+      # - If you're using the docker exporter, or you're loading the build
+      #   results to the runner with load: true, no attestations are added to
+      #   the image. These output formats don't support attestations.
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64
           push: true
+          sbom: true # add SBOMs, default: false
+          # enforce provenance
+          # provenance: mode=max
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
