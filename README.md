@@ -1,1 +1,1 @@
-# kcd-bratislava-2025-attestations
+# kcd-bratislava-2025-oci-attestations
