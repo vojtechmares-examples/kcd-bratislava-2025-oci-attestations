@@ -15,6 +15,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+        with:
+          cosign-release: "v2.5.0"
+
       - name: Set up qemu
         uses: docker/setup-qemu-action@v3
 
@@ -51,6 +56,7 @@ jobs:
       #   the image. These output formats don't support attestations.
       - name: Build and push
         uses: docker/build-push-action@v6
+        id: build-and-push
         with:
           context: .
           platforms: linux/amd64
@@ -60,3 +66,12 @@ jobs:
           # provenance: mode=max
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Sign the published OCI image
+        env:
+          # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        # This step uses the identity token to provision an ephemeral certificate
+        # against the sigstore community Fulcio instance.
+        run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
