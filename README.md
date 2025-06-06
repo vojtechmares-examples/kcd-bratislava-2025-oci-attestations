@@ -1,5 +1,7 @@
 # kcd-bratislava-2025-oci-attestations
 
+[Slides (Power Point)](/docs/slides.pptx)
+
 ## Setup Policy Controller
 
 Install Policy Controller:
