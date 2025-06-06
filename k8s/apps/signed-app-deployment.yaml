@@ -1,0 +1,35 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: signed-demo-app
+  namespace: kcd-demo
+spec:
+  selector:
+    matchLabels:
+      app: signed-demo-app
+  template:
+    metadata:
+      labels:
+        app: signed-demo-app
+    spec:
+      containers:
+      - name: demo
+        image: ghcr.io/vojtechmares-examples/kcd-bratislava-2025-oci-attestations/app-signed:main-e8c5e2a0155c5205f627a8417ae2318b169f4087
+        resources:
+          limits:
+            memory: 128Mi
+            cpu: 250m
+          requests:
+            cpu: 250m
+            memory: 128Mi
+        ports:
+        - containerPort: 8080
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: [ "ALL" ]
+          runAsNonRoot: true
+          runAsUser: 1001
+          runAsGroup: 1001
