@@ -1,9 +1,7 @@
 resource "digitalocean_kubernetes_cluster" "kcd_demo" {
-  name   = "kcd-demo"
-  region = "fra1"
-  # Grab the latest version slug from `doctl kubernetes options versions` (e.g. "1.14.6-do.1"
-  # If set to "latest", latest published version will be used.
-  version = "latest"
+  name    = "kcd-demo"
+  region  = "fra1"
+  version = "1.32.2-do.3"
 
   node_pool {
     name       = "worker-pool"
