@@ -7,11 +7,5 @@ resource "digitalocean_kubernetes_cluster" "kcd_demo" {
     name       = "worker-pool"
     size       = "s-2vcpu-4gb"
     node_count = 2
-
-    taint {
-      key    = "workloadKind"
-      value  = "database"
-      effect = "NoSchedule"
-    }
   }
 }
