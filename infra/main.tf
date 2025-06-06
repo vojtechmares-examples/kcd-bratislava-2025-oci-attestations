@@ -9,3 +9,8 @@ resource "digitalocean_kubernetes_cluster" "kcd_demo" {
     node_count = 2
   }
 }
+
+output "kubeconfig" {
+  value     = digitalocean_kubernetes_cluster.kcd_demo.kube_config[0].raw_config
+  sensitive = true
+}
