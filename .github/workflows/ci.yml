@@ -147,7 +147,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-      id-tokens: write
+      id-token: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
