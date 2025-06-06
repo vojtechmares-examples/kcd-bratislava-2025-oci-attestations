@@ -2,3 +2,4 @@
 .terraform.lock.hcl
 *.tfstate*
 secrets.auto.tfvars
+kubeconfig.yaml
