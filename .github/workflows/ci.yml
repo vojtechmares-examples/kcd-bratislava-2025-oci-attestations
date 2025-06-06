@@ -141,3 +141,82 @@ jobs:
         # This step uses the identity token to provision an ephemeral certificate
         # against the sigstore community Fulcio instance.
         run: echo "${TAGS}" | xargs -I {} cosign sign --key env://COSIGN_KEY --yes {}@${DIGEST}
+
+  build-and-sign-with-oidc:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+      id-tokens: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+        with:
+          cosign-release: "v2.5.0"
+
+      # Validate the Dockerfile base image, to make sure we are using the
+      # correct image and not some fake.
+      - name: Validate Dockerfile base image (distroless)
+        shell: bash
+        run: cosign dockerfile verify --base-image-only --certificate-identity keyless@distroless.iam.gserviceaccount.com --certificate-oidc-issuer https://accounts.google.com Dockerfile
+
+      - name: Set up qemu
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: |
+            ghcr.io/${{ github.repository }}/app-signed-with-oidc
+          tags: |
+            type=ref,event=branch,suffix=-${{ github.sha }}
+            type=sha,format=long
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+
+      ## Ref: https://docs.docker.com/build/ci/github-actions/attestations/#default-provenance
+      # The docker/build-push-action GitHub Action automatically adds provenance
+      # attestations to your image, with the following conditions:
+      # - If the GitHub repository is public, provenance attestations with
+      #   mode=max are automatically added to the image.
+      # - If the GitHub repository is private, provenance attestations with
+      #   mode=min are automatically added to the image.
+      # - If you're using the docker exporter, or you're loading the build
+      #   results to the runner with load: true, no attestations are added to
+      #   the image. These output formats don't support attestations.
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        id: build-and-push
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          sbom: true # add SBOMs, default: false
+          # enforce provenance
+          # provenance: mode=max
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      # Sign the image we built with cosign using private key
+      - name: Sign the published OCI image
+        shell: bash
+        env:
+          # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        # This step uses the identity token to provision an ephemeral certificate
+        # against the sigstore community Fulcio instance.
+        run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
